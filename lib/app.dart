@@ -2,6 +2,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:polly_colle_battle/View/AppTheme.dart';
 import 'package:polly_colle_battle/View/pages/battle.dart';
+import 'package:polly_colle_battle/View/pages/polly.dart';
 import 'package:polly_colle_battle/View/pages/title.dart';
 
 import 'flavors.dart';
@@ -21,6 +22,7 @@ class App extends StatelessWidget {
           routes: {
             '/': (context) => const TitlePage(),
             '/battle': (context) => const BattlePage(),
+            '/polly': (context) => const PollyPage(),
           },
           builder: (context, widget) {
             Widget error = const Text('...rendering error...');

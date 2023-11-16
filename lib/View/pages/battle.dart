@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_unity_widget/flutter_unity_widget.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
+import 'package:polly_colle_battle/data/unityObjects/game_manager.dart';
 
 class BattlePage extends StatefulWidget {
   const BattlePage({Key? key}) : super(key: key);
@@ -36,8 +36,7 @@ class _BattlePageState extends State<BattlePage> {
         Positioned(
             top: 20,
             left: 20,
-            child: PointerInterceptor(
-                child: Card(
+            child: Card(
               elevation: 10,
               child: Column(
                 children: [
@@ -55,14 +54,15 @@ class _BattlePageState extends State<BattlePage> {
                   // ),
                 ],
               ),
-            )))
+            ))
       ])),
     );
   }
 
   // Callback that connects the created controller to the unity controller
-  void _onUnityCreated(controller) {
+  void _onUnityCreated(UnityWidgetController controller) {
     _unityWidgetController = controller;
+    UWGameManager(controller).openScene(SceneList.battle);
   }
 
   void _onUnityMessage(message) {

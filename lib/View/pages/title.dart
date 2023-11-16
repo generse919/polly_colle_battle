@@ -27,7 +27,11 @@ class TitlePage extends ConsumerWidget {
                       Navigator.pushNamed(context, "/battle");
                     },
                     child: const Text("Battle")),
-                const TextButton(onPressed: null, child: Text("Pollies")),
+                TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, "/polly");
+                    },
+                    child: const Text("Pollies")),
               ],
             ),
           )
