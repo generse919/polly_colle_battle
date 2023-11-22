@@ -28,6 +28,8 @@ dependencies:
   flutter_unity_widget: ^2022.2.0 #unityをflutterから操作できる
   flutter_flavorizr: ^2.2.1
   flutter_webrtc: ^0.9.46
+  dropdown_button2: ^2.3.9
+  camera: ^0.10.5+5
 dev_dependencies:
   flutter_test:
     sdk: flutter

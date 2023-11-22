@@ -17,6 +17,7 @@ class App extends StatelessWidget {
         return MaterialApp(
           theme: AppTheme.lightTheme(lightDynamic),
           darkTheme: AppTheme.darkTheme(darkDynamic),
+          showPerformanceOverlay: (F.appFlavor == Flavor.dev),
           title: F.title,
           initialRoute: "/",
           routes: {
