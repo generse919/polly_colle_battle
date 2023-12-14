@@ -1,5 +1,30 @@
 {
   "dependencies": {
+    "com.frozenstorminteractive.assimp": {
+      "version": "4.1.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://upm.frozenstorminteractive.com"
+    },
+    "com.frozenstorminteractive.assimp.android": {
+      "version": "4.1.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.frozenstorminteractive.assimp": "4.1.0"
+      },
+      "url": "https://upm.frozenstorminteractive.com"
+    },
+    "com.frozenstorminteractive.assimp.ios": {
+      "version": "4.1.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.frozenstorminteractive.assimp": "4.1.0"
+      },
+      "url": "https://upm.frozenstorminteractive.com"
+    },
     "com.unity.burst": {
       "version": "1.8.8",
       "depth": 1,
