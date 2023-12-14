@@ -39,4 +39,10 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadScene(scene);
     }
+
+    public void OpenModel(String modelPath)
+    {
+        GameObject mainModel = GameObject.Find("MainModel");
+        mainModel.GetComponent<ModelGenerator>().LoadFBX(modelPath);
+    }
 }

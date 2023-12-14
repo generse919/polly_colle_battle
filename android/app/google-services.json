@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "195584504433",
+    "project_id": "pollycollebattle-6e2dd",
+    "storage_bucket": "pollycollebattle-6e2dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:195584504433:android:a9dbe98de74905f343e1d0",
+        "android_client_info": {
+          "package_name": "com.example.polly_colle_battle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDR0bWEfiTpZNbQtnLqN5u1_obAHrk-Qm4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

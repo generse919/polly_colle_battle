@@ -70,6 +70,30 @@ public class ModelGenerator : MonoBehaviour
     }
 
 
+    public void LoadFBX(string fbxFilePath)
+    {
+        // FBXファイルのパスが指定されているか確認
+        if (string.IsNullOrEmpty(fbxFilePath))
+        {
+            Debug.LogError("FBXファイルのパスが指定されていません。");
+            return;
+        }
+
+        // FBXファイルをロード
+        GameObject fbxObject = (GameObject)Instantiate(Resources.Load(fbxFilePath));
+
+        // ロードしたFBXファイルをシーンに追加
+        if (fbxObject != null)
+        {
+            _avaterModel = fbxObject;
+        }
+        else
+        {
+            Debug.LogError("FBXファイルのロードに失敗しました。");
+        }
+    }
+
+
 
 
 }

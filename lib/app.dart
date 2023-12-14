@@ -2,7 +2,9 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:polly_colle_battle/View/AppTheme.dart';
 import 'package:polly_colle_battle/View/pages/battle.dart';
+import 'package:polly_colle_battle/View/pages/image_preview.dart';
 import 'package:polly_colle_battle/View/pages/polly.dart';
+import 'package:polly_colle_battle/View/pages/start.dart';
 import 'package:polly_colle_battle/View/pages/title.dart';
 
 import 'flavors.dart';
@@ -19,11 +21,15 @@ class App extends StatelessWidget {
           darkTheme: AppTheme.darkTheme(darkDynamic),
           showPerformanceOverlay: (F.appFlavor == Flavor.dev),
           title: F.title,
-          initialRoute: "/",
+          initialRoute: "/start",
           routes: {
-            '/': (context) => const TitlePage(),
+            '/start': (context) => const StartPage(),
+            '/title': (context) => const TitlePage(),
             '/battle': (context) => const BattlePage(),
             '/polly': (context) => const PollyPage(),
+            '/polly_create_menu': (context) => const OnPollyMakeMenu(),
+            '/polly_image_preview': (context) =>
+                const ImagePreview(imagePath: "assets/images/apple.jpeg")
           },
           builder: (context, widget) {
             Widget error = const Text('...rendering error...');

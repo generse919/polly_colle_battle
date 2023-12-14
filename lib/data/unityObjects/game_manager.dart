@@ -19,4 +19,8 @@ class UWGameManager extends UnityObject {
     String sceneName = "${scene.name}scene".toUpperCamelCase();
     controller.postMessage(name(), "OpenScene", sceneName);
   }
+
+  void openModel(String path) {
+    controller.postMessage(name(), "OpenModel", path);
+  }
 }
