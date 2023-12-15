@@ -23,6 +23,12 @@ class SignInPrefNotifier extends StateNotifier<SignInPreference> {
     state = state.copyWith(email: email);
   }
 
+  void updatePassword(String password) async {
+    final pref = await ref.read(sharedPreferenceProvider.future);
+    pref.setString('Password', password);
+    state = state.copyWith(password: password);
+  }
+
   init() async {
     ref.read(sharedPreferenceProvider.future).then((pref) {
       final email = pref.getString('Email') ?? '';
@@ -51,34 +57,24 @@ class _StartPageState extends ConsumerState<StartPage> {
     initData();
   }
 
-  initData() async {
-    final pref = await ref.read(sharedPreferenceProvider.future);
-    final email = pref.getString('Email') ?? '';
+  initData() {
+    final pref = ref.read(signInPrefProvider);
+    final email = pref.email;
+    final password = pref.password;
     if (!mounted) return;
-    Develop.log("mount: $email");
-    ref.read(signInPrefProvider.notifier).updateEmail(email);
-  }
-
-  bool validateAndSave() {
-    // final form = key.currentState;
-    // if (form.validate()) {
-    //   form.save();
-    //   return true;
-    // }
-    // return false;
-    return true;
+    Develop.log("mount: Email: $email,Password: $password");
   }
 
   Future<void> validateAndSubmit() async {
-    if (validateAndSave()) {
-      try {
-        User? user = (await FirebaseAuth.instance.signInWithEmailAndPassword(
-                email: ref.read(signInPrefProvider).email, password: "123456"))
-            .user;
-        print('Singed in: ${user?.uid}');
-      } catch (e) {
-        print('Error: $e');
-      }
+    try {
+      final preference = ref.read(signInPrefProvider);
+      User? user = (await FirebaseAuth.instance.signInWithEmailAndPassword(
+              email: preference.email, password: preference.password))
+          .user;
+      print('Singed in: ${user?.uid}');
+    } catch (e) {
+      print('Error: $e');
+      rethrow;
     }
   }
 
@@ -102,40 +98,64 @@ class _StartPageState extends ConsumerState<StartPage> {
       // }
       if (value == true) {
         validateAndSubmit().then((_) => Navigator.pushNamed(context, "/title"),
-            onError: (e) => print(e));
+            onError: (e) => showDialog(
+                context: context,
+                builder: (BuildContext context) =>
+                    AlertDialog(title: Text(e.toString()))));
       }
     });
   }
 
   showSignInDialog(context) {
-    showActionDialog(
+    showActionDialog<bool>(
         context: context,
         child: AlertDialog(
-            title: const Text(
-              'Enter server address:',
-              style: TextStyle(
-                fontSize: 10,
-              ),
+            title: Text(
+              'EmailとPasswordを入力してください',
+              style: Theme.of(context).textTheme.labelSmall,
             ),
-            content: TextField(
-              onChanged: (String text) {
-                ref.read(signInPrefProvider.notifier).updateEmail(text);
-              },
-              decoration: InputDecoration(
-                hintText: ref.watch(signInPrefProvider).email,
+            content: SizedBox(
+              height: 100,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextField(
+                    onChanged: (String text) {
+                      ref.read(signInPrefProvider.notifier).updateEmail(text);
+                    },
+                    decoration: InputDecoration(
+                      hintText: ref.read(signInPrefProvider).email,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                  TextField(
+                    onChanged: (String text) {
+                      ref
+                          .read(signInPrefProvider.notifier)
+                          .updatePassword(text);
+                    },
+                    decoration: InputDecoration(
+                      hintText: ref
+                          .read(signInPrefProvider)
+                          .password
+                          .replaceAll(RegExp(r'.'), '•'),
+                    ),
+                    textAlign: TextAlign.start,
+                    obscureText: true,
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
             actions: <Widget>[
-              TextButton(
-                  child: const Text('START'),
-                  onPressed: () {
-                    Navigator.pop(context, true);
-                  }),
               TextButton(
                   child: const Text('CANCEL'),
                   onPressed: () {
                     Navigator.pop(context, false);
+                  }),
+              TextButton(
+                  child: const Text('START'),
+                  onPressed: () {
+                    Navigator.pop(context, true);
                   }),
             ]));
   }
@@ -159,20 +179,9 @@ class _StartPageState extends ConsumerState<StartPage> {
             child: Column(
               children: [
                 TextButton(
-                    onPressed: () async {
+                    onPressed: () {
+                      //ログイン用画面を表示
                       showSignInDialog(context);
-
-                      // await validateAndSubmit();
-                      // FirebaseAuth.instance
-                      //     .authStateChanges()
-                      //     .listen((User? user) {
-                      //   if (user == null) {
-                      //     print('User is currently signed out!');
-                      //   } else {
-                      //     print('User is signed in!');
-                      //   }
-                      // });
-                      // Navigator.pushNamed(context, "/title");
                     },
                     child: const Text("Start")),
               ],

@@ -26,7 +26,7 @@ class Polly {
 ///Pollyのリストを管理するプロバイダ
 
 class PollyListNotifier extends StateNotifier<List<Polly>> {
-  PollyListNotifier(List<Polly> state) : super(state);
+  PollyListNotifier(super.state);
 
   void add(Polly polly) {
     //ソケットがある場合はコールバックを登録
@@ -47,14 +47,14 @@ class PollyListNotifier extends StateNotifier<List<Polly>> {
   }
 }
 
-final appleImagePathProvider =
-    StateNotifierProvider<MoveDocPathNotifier, AsyncValue<String>>((ref) {
+final appleImagePathProvider = StateNotifierProvider.family<MoveDocPathNotifier,
+    AsyncValue<String>, String>((ref, path) {
   // const srcPath = "assets/images/apple.jpeg";
   // final dstPath = await FileHelper.appDocumentsDir
   //     .then((value) => "${value!.path}/${path.basename(srcPath)}");
   // await FileHelper.moveFile(File(srcPath), dstPath);
   // return dstPath;
-  return MoveDocPathNotifier(srcPath: "assets/images/apple.jpeg");
+  return MoveDocPathNotifier(srcPath: path);
 });
 
 class MoveDocPathNotifier extends StateNotifier<AsyncValue<String>> {
@@ -67,41 +67,80 @@ class MoveDocPathNotifier extends StateNotifier<AsyncValue<String>> {
     state = const AsyncValue.loading();
     Develop.log("loading");
     //ファイルが存在するか確認
-    const srcPath = "assets/images/apple.jpeg";
     final dstPath = await FileHelper.appDocumentsDir
         .then((value) => "${value!.path}/${path.basename(srcPath)}");
-    final bytes = await rootBundle.load(srcPath);
-    await FileHelper.moveFile(bytes, dstPath);
+    final srcBytes = await rootBundle.load(srcPath);
+    await FileHelper.moveFile(srcBytes, dstPath);
+    final dstBytes = await File(dstPath).readAsBytes();
+    Develop.log("move : ${dstBytes.length}");
     state = AsyncValue.data(dstPath);
   }
 }
 
-final appleFbxPathProvider =
-    StateNotifierProvider<MoveDocPathNotifier, AsyncValue<String>>((ref) {
-  // const srcPath = "assets/models/apple.fbx";
-  // final dstPath = await FileHelper.appDocumentsDir
-  //     .then((value) => "${value!.path}/${path.basename(srcPath)}");
-  // await FileHelper.moveFile(File(srcPath), dstPath);
-  // return dstPath;
-  return MoveDocPathNotifier(srcPath: "assets/models/apple.fbx");
+final assetMoveProvider = StateNotifierProvider.family<MoveDocPathNotifier,
+    AsyncValue<String>, String>((ref, path) {
+  return MoveDocPathNotifier(srcPath: path);
 });
 
 final pollyListProvider =
     StateNotifierProvider<PollyListNotifier, List<Polly>>((ref) {
-  final imagePathState = ref.watch(appleImagePathProvider);
-  final fbxPathState = ref.watch(appleFbxPathProvider);
+  final appleJpegPathState =
+      ref.watch(assetMoveProvider("assets/images/apple.jpeg"));
+  final appleGlbPathState =
+      ref.watch(assetMoveProvider("assets/models/apple.glb"));
+  final bananaJpegPathState =
+      ref.watch(assetMoveProvider("assets/images/banana.jpeg"));
+  final bananaGlbPathState =
+      ref.watch(assetMoveProvider("assets/models/banana.glb"));
+  final icecreamJpegPathState =
+      ref.watch(assetMoveProvider("assets/images/icecream.jpeg"));
+  final icecreamGlbPathState =
+      ref.watch(assetMoveProvider("assets/models/icecream.glb"));
+  final wrestlerJpegPathState =
+      ref.watch(assetMoveProvider("assets/images/wrestler.jpeg"));
+  final wrestlerGlbPathState =
+      ref.watch(assetMoveProvider("assets/models/wrestler.glb"));
+
   List<Polly> list = [];
 
-  if (imagePathState is AsyncData && fbxPathState is AsyncData) {
+  if (appleJpegPathState is AsyncData &&
+      appleGlbPathState is AsyncData &&
+      bananaJpegPathState is AsyncData &&
+      bananaGlbPathState is AsyncData &&
+      icecreamJpegPathState is AsyncData &&
+      icecreamGlbPathState is AsyncData &&
+      wrestlerJpegPathState is AsyncData &&
+      wrestlerGlbPathState is AsyncData) {
     list = [
       ...list,
       Polly(
         PollyData(
             name: "apple",
-            imagePath: imagePathState.value!,
-            pollyPath: fbxPathState.value!,
+            imagePath: appleJpegPathState.value!,
+            pollyPath: appleGlbPathState.value!,
             status: PollyStatus.available),
-      )
+      ),
+      Polly(
+        PollyData(
+            name: "banana",
+            imagePath: bananaJpegPathState.value!,
+            pollyPath: bananaGlbPathState.value!,
+            status: PollyStatus.available),
+      ),
+      Polly(
+        PollyData(
+            name: "icecream",
+            imagePath: icecreamJpegPathState.value!,
+            pollyPath: icecreamGlbPathState.value!,
+            status: PollyStatus.available),
+      ),
+      Polly(
+        PollyData(
+            name: "wrestler",
+            imagePath: wrestlerJpegPathState.value!,
+            pollyPath: wrestlerGlbPathState.value!,
+            status: PollyStatus.available),
+      ),
     ];
   }
 
@@ -138,7 +177,9 @@ class _PollyPageState extends ConsumerState<PollyPage> {
     UWGameManager(controller).openScene(SceneList.polly);
   }
 
-  void _onUnityMessage(message) {}
+  void _onUnityMessage(message) {
+    Develop.log("Unity: $message");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,28 +221,26 @@ class _PollyPageState extends ConsumerState<PollyPage> {
                 ),
                 ...
                 //pollyListの要素数分、名前のTextウィジェットを生成
-                pollyList
-                    .map((e) => InkWell(
-                          onTap: () {
-                            UWGameManager(_unityWidgetController!)
-                                .openScene(SceneList.polly);
-                          },
-                          child: SizedBox(
-                            height: 90,
-                            child: Card(
-                                child: Row(
-                              children: [
-                                const SizedBox(
-                                  width: 87,
-                                  child: Icon(Icons.star_border_outlined),
-                                ),
-                                Text(e.data.name),
-                                Image.file(File(e.data.imagePath))
-                              ],
-                            )),
-                          ),
-                        ))
-                    .toList(),
+                pollyList.map((e) => InkWell(
+                      onTap: () {
+                        UWGameManager(_unityWidgetController!)
+                            .openModel(e.data.pollyPath);
+                      },
+                      child: SizedBox(
+                        height: 90,
+                        child: Card(
+                            child: Row(
+                          children: [
+                            const SizedBox(
+                              width: 87,
+                              child: Icon(Icons.star_border_outlined),
+                            ),
+                            Expanded(child: Text(e.data.name)),
+                            Image.file(File(e.data.imagePath))
+                          ],
+                        )),
+                      ),
+                    ))
               ],
             ),
           ),
