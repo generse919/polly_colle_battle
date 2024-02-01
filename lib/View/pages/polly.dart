@@ -1,3 +1,5 @@
+import 'dart:collection';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -28,22 +30,104 @@ class Polly {
 class PollyListNotifier extends StateNotifier<List<Polly>> {
   PollyListNotifier(super.state);
 
-  void add(Polly polly) {
-    //ソケットがある場合はコールバックを登録
-    if (polly.socket != null) {
-      polly.socket!.onMessage = (msg) {
-        print(msg);
-      };
-    }
-    state.add(polly);
-  }
-
   void remove(Polly polly) {
     state.remove(polly);
   }
 
   void update(Polly polly) {
-    state[state.indexOf(polly)] = polly;
+    var newState = List<Polly>.empty(growable: true);
+    for (var e in state) {
+      if (polly.data.name != e.data.name) {
+        newState.add(e);
+      } else {
+        newState.add(polly);
+      }
+    }
+    state = newState;
+
+    // state[state.indexOf(polly)] = polly;
+  }
+
+  Polly getPolly(Polly polly) {
+    for (var e in state) {
+      if (polly.data.name == e.data.name) {
+        return e;
+      }
+    }
+    return Polly(PollyData(
+        name: "invalid",
+        imagePath: "",
+        pollyPath: "",
+        status: PollyStatus.invalid));
+  }
+
+  pollyWrite(Polly polly, String filename) async {
+    final moveDir = await FileHelper.appDocumentsDir
+        .then((value) => "${value!.path}/$filename");
+    //キャッシュされていたバイトデータをシーケンス番号順にソートする。
+    final bytes = SplayTreeMap.from(
+            polly.data.data_cache!, (int a, int b) => a.compareTo(b))
+        .values
+        .toList() as List<int>;
+
+    await FileHelper.writeNewBytes(bytes, filename);
+  }
+
+  void add(Polly polly) {
+    //ソケットがある場合はコールバックを登録
+    if (polly.socket != null) {
+      polly.socket!.onMessage = (data) {
+        var message = jsonDecode(data);
+        Develop.log("message: ${message['status']}");
+        //messageにstatusが含まれている場合は、statusを更新する。
+        if (message.containsKey('status')) {
+          PollyStatus status = PollyStatus.invalid;
+          final oldPolly = getPolly(polly);
+          switch (message['status']) {
+            case "model_creation_started":
+              break;
+
+            ///モデル生成完了したら、ファイルパスを登録する。
+            case "model_creation_finished":
+              //pollyを書き込む。
+              pollyWrite(polly, message['filename'] as String);
+              oldPolly.socket?.close();
+              update(Polly(
+                  oldPolly.data.copyWith(
+                      pollyPath: message['filename'],
+                      status: PollyStatus.available),
+                  socket: null));
+              break;
+            case "model_creation_failed":
+              status = PollyStatus.delete;
+              break;
+            case "model_creation_send":
+              var chunkData = base64Decode(message['filedata']);
+              Develop.log("chunkData: ${chunkData.length}");
+              Develop.log("sequence: ${message['sequence']}");
+              update(Polly(
+                oldPolly.data.copyWith(
+                    data_cache: oldPolly.data.data_cache!
+                      ..addAll({message['sequence']: chunkData})),
+              ));
+              break;
+            default:
+              status = PollyStatus.invalid;
+              break;
+          }
+          // ref
+          //     .read(pollyListProvider.notifier)
+          //     .updateStatus(status, path.basenameWithoutExtension(imgPath));
+        }
+        // fileData.addAll(chunkData);
+        // if (fileData.length >= message['filesize']) {
+        //   writeToFile(fileData);
+        //   fileData.clear();
+        // }
+        // print(msg);
+      };
+    }
+    state.add(polly);
   }
 }
 
@@ -56,6 +140,8 @@ final appleImagePathProvider = StateNotifierProvider.family<MoveDocPathNotifier,
   // return dstPath;
   return MoveDocPathNotifier(srcPath: path);
 });
+
+final selectedPollyStateProvider = StateProvider<Polly?>((ref) => null);
 
 class MoveDocPathNotifier extends StateNotifier<AsyncValue<String>> {
   MoveDocPathNotifier({required String srcPath, Key? key})
@@ -70,7 +156,7 @@ class MoveDocPathNotifier extends StateNotifier<AsyncValue<String>> {
     final dstPath = await FileHelper.appDocumentsDir
         .then((value) => "${value!.path}/${path.basename(srcPath)}");
     final srcBytes = await rootBundle.load(srcPath);
-    await FileHelper.moveFile(srcBytes, dstPath);
+    await FileHelper.moveFileByteData(srcBytes, dstPath);
     final dstBytes = await File(dstPath).readAsBytes();
     Develop.log("move : ${dstBytes.length}");
     state = AsyncValue.data(dstPath);
@@ -181,10 +267,50 @@ class _PollyPageState extends ConsumerState<PollyPage> {
     Develop.log("Unity: $message");
   }
 
+  ///星マークをタップした時
+  _confirmChangeSelectedPolly(Polly p) async {
+    final isSelect = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('操作モデル選択'),
+        content: Text('操作モデルを${p.data.name}にしますか？'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                Navigator.pop(context, true);
+              });
+            },
+            child: const Text('はい'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                Navigator.pop(context, false);
+              });
+            },
+            child: const Text('いいえ'),
+          )
+        ],
+      ),
+    );
+    if (isSelect!) {
+      ref.read(selectedPollyStateProvider.notifier).state = p;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final pollyList = ref.watch(pollyListProvider);
+    ref.listen(pollyListProvider, (previous, next) {
+      if (!mounted) return;
+      if (previous != null && previous.length < next.length) {
+        ref.read(selectedPollyStateProvider.notifier).state = next.first;
+      }
+    });
+
+    final selectedPolly = ref.watch(selectedPollyStateProvider);
 
     return Scaffold(
       body: Container(
@@ -231,9 +357,15 @@ class _PollyPageState extends ConsumerState<PollyPage> {
                         child: Card(
                             child: Row(
                           children: [
-                            const SizedBox(
-                              width: 87,
-                              child: Icon(Icons.star_border_outlined),
+                            InkWell(
+                              onTap: () => _confirmChangeSelectedPolly(e),
+                              child: SizedBox(
+                                width: 87,
+                                child: (selectedPolly != null &&
+                                        selectedPolly.hashCode == e.hashCode)
+                                    ? const Icon(Icons.star)
+                                    : const Icon(Icons.star_border_outlined),
+                              ),
                             ),
                             Expanded(child: Text(e.data.name)),
                             Image.file(File(e.data.imagePath))

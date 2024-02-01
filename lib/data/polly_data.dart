@@ -10,9 +10,23 @@ class PollyData with _$PollyData {
   factory PollyData(
       {required String name,
       required String imagePath,
-      required String pollyPath,
+      String? pollyPath,
+      Map<int, List<int>>? data_cache,
       @Default(PollyStatus.invalid) PollyStatus status}) = _PollyData;
 
   factory PollyData.fromJson(Map<String, dynamic> json) =>
       _$PollyDataFromJson(json);
+}
+
+@freezed
+class SendPhotoData with _$SendPhotoData {
+  factory SendPhotoData(
+      {required String bytesBase64,
+      required int sequence,
+      required String filename,
+      required int clientId,
+      @Default(true) bool lastchunk}) = _SendPhotoData;
+
+  factory SendPhotoData.fromJson(Map<String, dynamic> json) =>
+      _$SendPhotoDataFromJson(json);
 }

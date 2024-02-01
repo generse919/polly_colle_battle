@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_unity_widget/flutter_unity_widget.dart';
 import 'package:polly_colle_battle/Dev/develop.dart';
 import 'package:polly_colle_battle/data/signIn_preference.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,6 +52,8 @@ class StartPage extends ConsumerStatefulWidget {
 }
 
 class _StartPageState extends ConsumerState<StartPage> {
+  UnityWidgetController? _unityWidgetController;
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +66,15 @@ class _StartPageState extends ConsumerState<StartPage> {
     final password = pref.password;
     if (!mounted) return;
     Develop.log("mount: Email: $email,Password: $password");
+  }
+
+  // Callback that connects the created controller to the unity controller
+  void _onUnityCreated(UnityWidgetController controller) {
+    _unityWidgetController = controller;
+  }
+
+  void _onUnityMessage(message) {
+    Develop.log("Unity: $message");
   }
 
   Future<void> validateAndSubmit() async {
@@ -100,8 +112,21 @@ class _StartPageState extends ConsumerState<StartPage> {
         validateAndSubmit().then((_) => Navigator.pushNamed(context, "/title"),
             onError: (e) => showDialog(
                 context: context,
-                builder: (BuildContext context) =>
-                    AlertDialog(title: Text(e.toString()))));
+                builder: (BuildContext context) => AlertDialog(
+                      title: Text(e.toString()),
+                      actions: <Widget>[
+                        TextButton(
+                            child: const Text('CANCEL'),
+                            onPressed: () {
+                              Navigator.pop(context, false);
+                            }),
+                        TextButton(
+                            child: const Text('START'),
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            }),
+                      ],
+                    )));
       }
     });
   }
@@ -165,6 +190,24 @@ class _StartPageState extends ConsumerState<StartPage> {
     return Scaffold(
       body: Stack(
         children: [
+          //UnityWidget(初期化で使用するため、非表示にしている)
+          Positioned(
+            top: 0,
+            left: 50,
+            child: Visibility(
+                visible: true,
+                maintainState: true,
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.8,
+                  child: UnityWidget(
+                    onUnityCreated: _onUnityCreated,
+                    onUnityMessage: _onUnityMessage,
+                    runImmediately: true,
+                    fullscreen: true,
+                  ),
+                )),
+          ),
           const Positioned(
             top: 220,
             left: 110,

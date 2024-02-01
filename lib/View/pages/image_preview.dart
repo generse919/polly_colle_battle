@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -123,55 +124,55 @@ class _ImagePreviewState extends ConsumerState<ImagePreview> {
     final file = File(imgPath);
     final srcFile = File(widget.imagePath);
 
-    await file.writeAsBytes(await srcFile.readAsBytes());
+    final sendData = await srcFile.readAsBytes();
 
-    final newWebSocket = SimpleWebSocket("http://www.sm-my-palace.com:8086");
+    await file.writeAsBytes(sendData);
+
+    final newWebSocket = SimpleWebSocket("ws://www.sm-my-palace.com:8086");
 
     newWebSocket.onOpen = () {
       Develop.log('WebSocket connection opened.');
     };
 
-    // newWebSocket.onMessage = (data) {
-    //   var message = jsonDecode(data);
-    //   var chunkData = (message['filedata'] as String).codeUnits;
-    //   fileData.addAll(chunkData);
-    //   if (fileData.length >= message['filesize']) {
-    //     writeToFile(fileData);
-    //     fileData.clear();
-    //   }
-    // };
-
     final addPolly = Polly(
         PollyData(
             name: path.basenameWithoutExtension(imgPath),
             imagePath: imgPath,
-            pollyPath: "",
-            status: PollyStatus.loading),
+            status: PollyStatus.loading,
+            data_cache: {}),
         socket: newWebSocket);
 
     ref.read(pollyListProvider.notifier).add(addPolly);
 
-    // newWebSocket.onOpen = () {
-    //   Develop.log('WebSocket connection opened.');
-    // };
-    // newWebSocket.onMessage = (data) {
-    //   var message = jsonDecode(data);
-    //   var chunkData = (message['filedata'] as String).codeUnits;
-    //   fileData.addAll(chunkData);
-    //   if (fileData.length >= message['filesize']) {
-    //     writeToFile(fileData);
-    //     fileData.clear();
-    //   }
-    // };
-    // newWebSocket.onClose = (code, reason) {
-    //   Develop.errLog(
-    //       'WebSocket connection closed. Code: $code. Reason: $reason');
-    // };
-    // setState(() {
-    //   ref.read(simpleWebSocketNotifyProvider.notifier).update(newWebSocket);
-    // });
-    // await ref.read(simpleWebSocketNotifyProvider.notifier).connect();
-    // ref.read(simpleWebSocketNotifyProvider.notifier).send('hello world');
+    newWebSocket.onClose = (code, reaso) {
+      Develop.log('WebSocket connection closed. $reaso');
+    };
+
+    await newWebSocket.connect();
+
+    int sequence = 0;
+
+    ///Jsonデータを作成し、送信する。
+    for (int i = 0; i < sendData.length;) {
+      List<int> bytes;
+      if (sendData.length - i < 1024) {
+        bytes = sendData.sublist(i, sendData.length);
+      } else {
+        bytes = sendData.sublist(i, i + 1024);
+      }
+      i += bytes.length;
+
+      SendPhotoData chunkData = SendPhotoData(
+          sequence: sequence++,
+          bytesBase64: base64Encode(bytes),
+          filename: path.basename(imgPath),
+          clientId: i,
+          lastchunk: (i >= sendData.length));
+      //Jsonデータを送信
+      // Develop.log("send: ${chunkData.toJson()}");
+      // await Future.delayed(const Duration(milliseconds: 100));
+      newWebSocket.send(chunkData.toJson());
+    }
   }
 
   @override
@@ -217,7 +218,11 @@ class _ImagePreviewState extends ConsumerState<ImagePreview> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           FilledButton(
-                              onPressed: _sendFileToModelConvertServer,
+                              onPressed: () {
+                                _sendFileToModelConvertServer();
+                                Navigator.popUntil(
+                                    context, ModalRoute.withName("/polly"));
+                              },
                               child: const Text("はい")),
                           FilledButton.tonal(
                               onPressed: () => Navigator.of(context).pop(),

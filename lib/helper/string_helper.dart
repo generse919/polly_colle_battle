@@ -5,4 +5,13 @@ extension StringExtension on String {
       return match.group(0)!.toUpperCase();
     });
   }
+
+  String convertToJson() {
+    var str = this;
+    str = str.toString().replaceAll('{', '{"');
+    str = str.toString().replaceAll(': ', '": "');
+    str = str.toString().replaceAll(', ', '", "');
+    str = str.toString().replaceAll('}', '"}');
+    return str;
+  }
 }

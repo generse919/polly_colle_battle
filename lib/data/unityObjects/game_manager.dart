@@ -20,7 +20,8 @@ class UWGameManager extends UnityObject {
     controller.postMessage(name(), "OpenScene", sceneName);
   }
 
-  void openModel(String path) {
+  void openModel(String? path) {
+    if (path == null) return;
     Develop.log("openModel $path");
     controller.postMessage(name(), "OpenModel", path);
   }

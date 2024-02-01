@@ -43,7 +43,7 @@ android {
         applicationId "com.example.polly_colle_battle"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion localProperties.getProperty('flutter.minSdkVersion')
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -60,4 +60,8 @@ android {
 
 flutter {
     source '../..'
+}
+
+dependencies {
+    implementation project(':unityLibrary')
 }

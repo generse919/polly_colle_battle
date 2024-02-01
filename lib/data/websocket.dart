@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:polly_colle_battle/Dev/develop.dart';
+import 'package:polly_colle_battle/helper/string_helper.dart';
 
 ///WebSocketクラス
 ///@auther: Yamamoto.S
@@ -44,16 +45,23 @@ final simpleWebSocketNotifyProvider =
 
 class SimpleWebSocket {
   final String _url;
+  // final dynamic _host;
+  // final int _port;
+  // final Uri _uri;
   var _socket;
   Function()? onOpen;
   Function(dynamic msg)? onMessage;
   Function(int? code, String? reaso)? onClose;
   SimpleWebSocket(this._url);
-
+  // SimpleWebSocket(this._host, this._port);
+  // SimpleWebSocket(this._uri);
   connect() async {
     try {
+      Develop.log('connect: $_url');
       _socket = await WebSocket.connect(_url);
       // _socket = await _connectForSelfSignedCert(_url);
+      // _socket = await Socket.connect(_host, _port);
+      // _socket = await Socket.connect(_uri.host, _uri.port);
       onOpen?.call();
       _socket.handleError((error) {
         print('Error in websocket: $error');
@@ -61,7 +69,7 @@ class SimpleWebSocket {
       _socket.listen((data) {
         onMessage?.call(data);
       }, onDone: () {
-        onClose?.call(_socket.closeCode, _socket.closeReason);
+        // onClose?.call(_socket.closeCode, _socket.closeReason);
       });
     } catch (e) {
       onClose?.call(500, e.toString());
@@ -69,14 +77,13 @@ class SimpleWebSocket {
   }
 
   send(data) {
-    if (_socket != null) {
-      _socket.add(data);
-      print('send: $data');
-    }
+    final json = data.toString().convertToJson();
+    _socket.add(json);
+    // Develop.log("send: $json");
   }
 
   close() {
-    if (_socket != null) _socket.close();
+    _socket.close();
   }
 
   ///オレオレ証明書で接続する。

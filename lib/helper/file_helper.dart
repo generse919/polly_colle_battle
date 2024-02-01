@@ -23,7 +23,8 @@ class FileHelper {
     return _downloadsDir;
   }
 
-  static Future<File> moveFile(ByteData sourceFile, String newPath) async {
+  static Future<File> moveFileByteData(
+      ByteData sourceFile, String newPath) async {
     // await delDir(newPath);
     // await ensureDirExists(newPath.replaceFirst(from, to) path.basename(newPath));
     final newFile = File(newPath);
@@ -42,6 +43,25 @@ class FileHelper {
     } finally {
       return newFile;
     }
+  }
+
+  static Future<File> moveFileList(List<int> bytes, String newPath) async {
+    final uintList = Uint8List.fromList(bytes);
+    return await moveFileByteData(ByteData.view(uintList.buffer), newPath);
+  }
+
+  ///ファイルに書き込む。
+  ///
+  ///既存のファイルがあれば、その後ろに追記する。
+  static Future<void> writeNewBytes(List<int> bytes, String newPath) async {
+    final newFile = File(newPath);
+    List<int> oldBytes = [];
+    if (await newFile.exists()) {
+      oldBytes = await newFile.readAsBytes();
+    }
+    final newBytes = [...oldBytes, ...bytes];
+
+    await newFile.writeAsBytes(newBytes);
   }
 
   static Future<void> ensureDirExists(String path) async {
