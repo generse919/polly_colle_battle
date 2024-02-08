@@ -202,7 +202,10 @@ class _ImagePreviewState extends ConsumerState<ImagePreview> {
       appBar: AppBar(title: const Text('Preview')),
       body: Stack(
         children: [
-          Image.file(File(widget.imagePath)),
+          Align(
+            alignment: Alignment.center,
+            child: Image.file(File(widget.imagePath)),
+          ),
           Positioned(
               bottom: 20,
               left: 20,

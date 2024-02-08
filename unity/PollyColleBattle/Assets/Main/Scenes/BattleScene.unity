@@ -1802,6 +1802,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6238227495463207555, guid: f574c00e745c44483a15e2917436d8c6, type: 3}
+      propertyPath: ModelUrl
+      value: /Users/ys/Documents/Github/polly_colle_battle/build/flutter_assets/assets/models/apple.glb
+      objectReference: {fileID: 0}
+    - target: {fileID: 6238227495463207555, guid: f574c00e745c44483a15e2917436d8c6, type: 3}
       propertyPath: _avaterModel
       value: 
       objectReference: {fileID: 919132149155446097, guid: 536e0b2516cca4dbe8ec4f4e422baf35, type: 3}

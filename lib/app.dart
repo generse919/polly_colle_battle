@@ -10,7 +10,7 @@ import 'package:polly_colle_battle/View/pages/title.dart';
 import 'flavors.dart';
 
 class App extends StatelessWidget {
-  const App({Key? key}) : super(key: key);
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +20,7 @@ class App extends StatelessWidget {
           theme: AppTheme.lightTheme(lightDynamic),
           darkTheme: AppTheme.darkTheme(darkDynamic),
           showPerformanceOverlay: (F.appFlavor == Flavor.dev),
+          debugShowCheckedModeBanner: false,
           title: F.title,
           initialRoute: "/start",
           routes: {

@@ -186,6 +186,10 @@ final pollyListProvider =
       ref.watch(assetMoveProvider("assets/images/wrestler.jpeg"));
   final wrestlerGlbPathState =
       ref.watch(assetMoveProvider("assets/models/wrestler.glb"));
+  final cakeJpegPathState =
+      ref.watch(assetMoveProvider("assets/images/cake.jpg"));
+  final cakeGlbPathState =
+      ref.watch(assetMoveProvider("assets/models/cake.glb"));
 
   List<Polly> list = [];
 
@@ -196,7 +200,9 @@ final pollyListProvider =
       icecreamJpegPathState is AsyncData &&
       icecreamGlbPathState is AsyncData &&
       wrestlerJpegPathState is AsyncData &&
-      wrestlerGlbPathState is AsyncData) {
+      wrestlerGlbPathState is AsyncData &&
+      cakeJpegPathState is AsyncData &&
+      cakeGlbPathState is AsyncData) {
     list = [
       ...list,
       Polly(
@@ -225,6 +231,13 @@ final pollyListProvider =
             name: "wrestler",
             imagePath: wrestlerJpegPathState.value!,
             pollyPath: wrestlerGlbPathState.value!,
+            status: PollyStatus.available),
+      ),
+      Polly(
+        PollyData(
+            name: "cake",
+            imagePath: cakeJpegPathState.value!,
+            pollyPath: cakeGlbPathState.value!,
             status: PollyStatus.available),
       ),
     ];
@@ -349,8 +362,9 @@ class _PollyPageState extends ConsumerState<PollyPage> {
                 //pollyListの要素数分、名前のTextウィジェットを生成
                 pollyList.map((e) => InkWell(
                       onTap: () {
-                        UWGameManager(_unityWidgetController!)
-                            .openModel(e.data.pollyPath);
+                        UWGameManager(_unityWidgetController!).openModel(
+                            OpenModelParam(
+                                path: e.data.pollyPath!, objName: "MainModel"));
                       },
                       child: SizedBox(
                         height: 90,

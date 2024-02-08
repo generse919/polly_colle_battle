@@ -2,8 +2,9 @@
 using FlutterUnityIntegration;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UniRx;
-using System.IO;
+
+
+
 
 public class GameManager : MonoBehaviour
 {
@@ -41,19 +42,37 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(scene);
     }
 
-    public void OpenModel(String modelPath)
+
+    [Serializable]
+    public class OpenModelParam
+    {
+        public string  path;
+        public string  objName;
+    }
+
+    /// <summary>
+    ///  
+    /// </summary>
+    /// <param name="param">OpenModelParamのJson文字列</param>
+    public void OpenModel(string param)
     {
         try
         {
-            GameObject mainModel = GameObject.Find("MainModel");
+
+            //UnityMessageManager.Instance.SendMessageToFlutter(param);
+            Debug.Log(param);
+            var omp = JsonUtility.FromJson<OpenModelParam>(param);
+            Debug.Log(omp.objName);
+            Debug.Log(omp.path);
+            GameObject mainModel = GameObject.Find(omp.objName);
             if(mainModel == null)
             {
                 GetComponent<UnityMessageManager>().SendMessageToFlutter("mainModel is null!");
             }
-            GetComponent<UnityMessageManager>().SendMessageToFlutter("モデル取得：" + modelPath);
+            GetComponent<UnityMessageManager>().SendMessageToFlutter("モデル取得：" + omp.path);
             GetComponent<UnityMessageManager>().SendMessageToFlutter("persistence path：" + Application.persistentDataPath);
 
-            mainModel.GetComponent<ModelGenerator>().SetGLB(modelPath);
+            mainModel.GetComponent<ModelGenerator>().SetGLB(omp.path);
         }
         catch (Exception e)
         {

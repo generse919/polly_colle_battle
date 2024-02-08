@@ -28,7 +28,7 @@ public class ModelGenerator : MonoBehaviour
     UnityEngine.Material mat_vertexColorApply;
 
     [SerializeField]
-    String ModelUrl;
+    String ModelUrl = null;
 
     GameObject _avaterInstance;
 
@@ -44,6 +44,7 @@ public class ModelGenerator : MonoBehaviour
         //   .Skip(1) // 初回は無視
         //   .Subscribe(OnModelChanged)
         //   .AddTo(gameObject);
+          
 
     }
     /// <summary>
