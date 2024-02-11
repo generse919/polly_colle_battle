@@ -8,10 +8,25 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+
+    public bool isDarkMode = false;
+
+    public int controlUseIndex = 0;
+
     // Start is called before the first frame update
     void Start()
     {
         gameObject.AddComponent<UnityMessageManager>();
+#if UNITY_EDITOR || UNITY_EDITOR_OSX
+        foreach(var o in GameObject.FindGameObjectsWithTag("Untagged"))
+        {
+            Debug.Log(o.name);
+            if(o.name == "glTF-StableFramerate")
+            {
+                Destroy(o);
+            }
+        }
+#endif
     }
 
     // Update is called once per frame
@@ -80,4 +95,20 @@ public class GameManager : MonoBehaviour
         }
         
     }
+
+
+
+    /// <summary>
+    /// ダークモードチェック
+    /// ネイティブから呼び出し可能だが、OSによって作り変えるのが面倒なため、Flutter側から判定する。
+    /// </summary>
+    /// <returns></returns>
+    public void SetDarkMode(bool flag)
+    {
+        isDarkMode = flag;
+    }
+
+    
+
+
 }

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 ///
 class AppTheme {
   static const Color seedColor = Color.fromRGBO(237, 222, 208, 1);
+  static const Color seedColorB = Color.fromRGBO(10, 10, 10, 1);
 
   static ThemeData lightTheme(ColorScheme? lightDynamicScheme) {
     final scheme =
@@ -20,8 +21,7 @@ class AppTheme {
   }
 
   static ThemeData darkTheme(ColorScheme? darkDynamicScheme) {
-    final scheme =
-        darkDynamicScheme ?? ColorScheme.fromSeed(seedColor: seedColor);
+    final scheme = darkDynamicScheme ?? const ColorScheme.dark();
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,

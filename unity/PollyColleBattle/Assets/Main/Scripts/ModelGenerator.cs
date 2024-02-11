@@ -16,9 +16,9 @@ using GLTFast.Logging;
 
 
 
-#if UNITY_EDITOR
-[ExecuteInEditMode]
-#endif
+//#if UNITY_EDITOR
+//[ExecuteInEditMode]
+//#endif
 public class ModelGenerator : MonoBehaviour
 {
     [SerializeField]
@@ -32,9 +32,9 @@ public class ModelGenerator : MonoBehaviour
 
     GameObject _avaterInstance;
 
-    GltfImport _gltfImport;
+    GltfImport _gltfImport = null;
     ImportSettings _settings;
-    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -44,7 +44,9 @@ public class ModelGenerator : MonoBehaviour
         //   .Skip(1) // 初回は無視
         //   .Subscribe(OnModelChanged)
         //   .AddTo(gameObject);
-          
+#if UNITY_EDITOR || UNITY_EDITOR_OSX
+        SetGLB(null);
+#endif
 
     }
     /// <summary>
@@ -98,10 +100,12 @@ public class ModelGenerator : MonoBehaviour
     /// </summary>
     private void InitGltfImport()
     {
+        _settings = new ImportSettings { };
+        //if (_gltfImport != null) return;
         _gltfImport = new GltfImport(
             materialGenerator: new CustomMaterialGenerator(mat_vertexColorApply));
         //_gltfImport.defaultMaterial = mat_vertexColorApply;
-        _settings = new ImportSettings{ };
+        
     }
 
     private void ClearModel()
@@ -113,31 +117,41 @@ public class ModelGenerator : MonoBehaviour
                 Destroy(child.gameObject);
         }
     }
-
+    /// <summary>
+    /// urlで指定されたGLBモデルをインポート
+    /// </summary>
+    /// <param name="url">GLBのURL null指定時はModelUrlに初期設定されたUrlからGLBを読み込む</param>
     public async void SetGLB(string url)
     {
-        if (ModelUrl == url) return;
+        
+        if(ModelUrl == null && url == null)
+        {
+            Debug.LogWarning("Both parameter \"ModelUrl\" & \"url\" are null and cannot be set GLB!!");
+        }
         InitGltfImport();
         ClearModel();
 
-        var success = await _gltfImport.Load(url,_settings);
+        Debug.Log("onEditor");
+
+        var loadingURL = (url == null) ? ModelUrl : url;
+        Debug.Log("loading: " + loadingURL);
+        var success = await _gltfImport.Load(loadingURL,_settings);
 
         if (success)
         {
             success = await _gltfImport.InstantiateMainSceneAsync(transform);
+            Debug.Log("setGLB: " + url);
+            if (url == null) return;
+            //生成したら、モデルのURLを保存
+            ModelUrl = url;
         }
         else
         {
             Debug.LogError("GLBを読み込めませんでした。");
+            return;
         }
 
-        if (!success)
-        {
-            Debug.LogError("GLBのインスタンス化に失敗しました。");
-        }
-
-        //生成したら、モデルのURLを保存
-        ModelUrl = url;
+        
        
     }
 

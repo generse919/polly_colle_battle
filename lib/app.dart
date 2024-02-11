@@ -1,5 +1,6 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:polly_colle_battle/View/AppTheme.dart';
 import 'package:polly_colle_battle/View/pages/battle.dart';
 import 'package:polly_colle_battle/View/pages/image_preview.dart';
@@ -9,11 +10,27 @@ import 'package:polly_colle_battle/View/pages/title.dart';
 
 import 'flavors.dart';
 
-class App extends StatelessWidget {
+// final navigatorKey = GlobalKey<NavigatorState>();
+
+// final navigatorKeyProvider = Provider((_) => navigatorKey);
+
+// final ThemeProvider = StateProvider<Brightness>((ref) {
+//   return MediaQuery.of(ref.read(navigatorKeyProvider).currentContext!)
+//       .platformBrightness;
+// });
+
+class App extends ConsumerWidget {
   const App({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ref.listen<Brightness>(
+    //   ThemeProvider,
+    //   (pre, nxt) {
+    //     print("Brightness: $nxt");
+    //   },
+    // );
+
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
         return MaterialApp(

@@ -61,4 +61,8 @@ class UWGameManager extends UnityObject {
     controller.postMessage(
         name(), "OpenModel", param.toJson().toString().convertToJson());
   }
+
+  void setDarkMode(bool isDarkMode) {
+    controller.postMessage(name(), "SetDarkMode", isDarkMode);
+  }
 }
