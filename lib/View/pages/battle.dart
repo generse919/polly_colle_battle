@@ -62,7 +62,7 @@ class _BattlePageState extends State<BattlePage> {
   // Callback that connects the created controller to the unity controller
   void _onUnityCreated(UnityWidgetController controller) {
     _unityWidgetController = controller;
-    UWGameManager(controller).openScene(SceneList.battle);
+    UWGameManager(controller).openScene(SceneList.battleScene);
   }
 
   void _onUnityMessage(message) {

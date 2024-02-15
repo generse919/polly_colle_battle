@@ -17,8 +17,9 @@ Map<String, dynamic> _$$SceneParamImplToJson(_$SceneParamImpl instance) =>
     };
 
 const _$SceneListEnumMap = {
-  SceneList.polly: 'polly',
-  SceneList.battle: 'battle',
+  SceneList.pollyScene: 'pollyScene',
+  SceneList.battleScene: 'battleScene',
+  SceneList.pollySceneDemo: 'pollySceneDemo',
   SceneList.none: 'none',
 };
 

@@ -20,8 +20,9 @@ part 'game_manager.g.dart';
 ///
 
 enum SceneList {
-  polly,
-  battle,
+  pollyScene,
+  battleScene,
+  pollySceneDemo,
   none,
 }
 
@@ -52,7 +53,7 @@ class UWGameManager extends UnityObject {
   //
   //開くシーン
   void openScene(SceneList scene) {
-    String sceneName = "${scene.name}scene".toUpperCamelCase();
+    String sceneName = scene.name.toUpperCamelCase();
     controller.postMessage(name(), "OpenScene", sceneName);
   }
 

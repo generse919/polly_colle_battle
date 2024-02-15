@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
 
@@ -18,10 +16,19 @@ public class StageController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        gm
-            .ObserveEveryValueChanged(_gm => _gm.isDarkMode)
-            .Subscribe(flag => changeMat(flag));
+        var o_gm = GameObject.Find("GameManager");
+        if (o_gm == null)
+        {
+            Debug.LogWarning("GameManager does not found!");
+        }
+        else
+        {
+            gm = o_gm.GetComponent<GameManager>();
+            gm
+           .ObserveEveryValueChanged(_gm => _gm.isDarkMode)
+           .Subscribe(flag => changeMat(flag));
+        }
+        
 
         if (o_stageTile == null)
         {

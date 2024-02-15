@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 ///S.Yamamoto
 ///
 class AppTheme {
-  static const Color seedColor = Color.fromRGBO(237, 222, 208, 1);
+  static const Color seedColor = Color.fromRGBO(234, 0, 47, 1);
   static const Color seedColorB = Color.fromRGBO(10, 10, 10, 1);
 
   static ThemeData lightTheme(ColorScheme? lightDynamicScheme) {

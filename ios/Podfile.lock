@@ -30,9 +30,6 @@ PODS:
   - Flutter (1.0.0)
   - flutter_unity_widget (4.0.0):
     - Flutter
-  - flutter_webrtc (0.9.36):
-    - Flutter
-    - WebRTC-SDK (= 114.5735.08)
   - GoogleUtilities/AppDelegateSwizzler (7.12.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
@@ -59,7 +56,6 @@ PODS:
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - WebRTC-SDK (114.5735.08)
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
 
@@ -69,7 +65,6 @@ DEPENDENCIES:
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - Flutter (from `Flutter`)
   - flutter_unity_widget (from `.symlinks/plugins/flutter_unity_widget/ios`)
-  - flutter_webrtc (from `.symlinks/plugins/flutter_webrtc/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -86,7 +81,6 @@ SPEC REPOS:
     - GTMSessionFetcher
     - PromisesObjC
     - RecaptchaInterop
-    - WebRTC-SDK
 
 EXTERNAL SOURCES:
   camera_avfoundation:
@@ -99,8 +93,6 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_unity_widget:
     :path: ".symlinks/plugins/flutter_unity_widget/ios"
-  flutter_webrtc:
-    :path: ".symlinks/plugins/flutter_webrtc/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   path_provider_foundation:
@@ -121,7 +113,6 @@ SPEC CHECKSUMS:
   FirebaseCoreInternal: b444828ea7cfd594fca83046b95db98a2be4f290
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   flutter_unity_widget: e509f3109933aa0c63b1bc149ca3d5b90fb68543
-  flutter_webrtc: 55df3aaa802114dad390191a46c2c8d535751268
   GoogleUtilities: 0759d1a57ebb953965c2dfe0ba4c82e95ccc2e34
   GTMSessionFetcher: 41b9ef0b4c08a6db4b7eb51a21ae5183ec99a2c8
   image_picker_ios: 4a8aadfbb6dc30ad5141a2ce3832af9214a705b5
@@ -129,7 +120,6 @@ SPEC CHECKSUMS:
   PromisesObjC: c50d2056b5253dadbd6c2bea79b0674bd5a52fa4
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
   shared_preferences_foundation: 5b919d13b803cadd15ed2dc053125c68730e5126
-  WebRTC-SDK: c24d2a6c9f571f2ed42297cb8ffba9557093142b
   webview_flutter_wkwebview: 4f3e50f7273d31e5500066ed267e3ae4309c5ae4
 
 PODFILE CHECKSUM: 7be2f5f74864d463a8ad433546ed1de7e0f29aef

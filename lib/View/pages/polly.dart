@@ -273,7 +273,7 @@ class _PollyPageState extends ConsumerState<PollyPage> {
   // Callback that connects the created controller to the unity controller
   void _onUnityCreated(UnityWidgetController controller) {
     _unityWidgetController = controller;
-    UWGameManager(controller).openScene(SceneList.polly);
+    // UWGameManager(controller).openScene(SceneList.pollyScene);
   }
 
   void _onUnityMessage(message) {

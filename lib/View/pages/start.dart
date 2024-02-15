@@ -191,30 +191,32 @@ class _StartPageState extends ConsumerState<StartPage> {
       body: Stack(
         children: [
           //UnityWidget(初期化で使用するため、非表示にしている)
+          // Positioned(
+          //   top: 0,
+          //   left: 0,
+          //   child: Visibility(
+          //       visible: true,
+          //       maintainState: true,
+          //       child: SizedBox(
+          //         width: MediaQuery.of(context).size.width,
+          //         height: MediaQuery.of(context).size.height,
+          //         child: UnityWidget(
+          //           onUnityCreated: _onUnityCreated,
+          //           onUnityMessage: _onUnityMessage,
+          //           runImmediately: true,
+          //           fullscreen: true,
+          //         ),
+          //       )),
+          // ),
           Positioned(
-            top: 0,
-            left: 50,
-            child: Visibility(
-                visible: true,
-                maintainState: true,
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.8,
-                  height: MediaQuery.of(context).size.height * 0.8,
-                  child: UnityWidget(
-                    onUnityCreated: _onUnityCreated,
-                    onUnityMessage: _onUnityMessage,
-                    runImmediately: true,
-                    fullscreen: true,
-                  ),
-                )),
-          ),
-          const Positioned(
             top: 220,
             left: 110,
             right: 110,
-            child: Text(
-              "PollyColle-ばとる",
-            ),
+            child: Text("PollyColle-ばとる",
+                style: TextStyle(
+                    fontSize: 30,
+                    color: Theme.of(context).colorScheme.primary,
+                    fontFamily: 'PottaOne')),
           ),
           Positioned(
             top: 440,
