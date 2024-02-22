@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 ///2023.09.10
 ///アプリテーマ設定
@@ -16,16 +17,31 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      fontFamily: 'PottaOne',
+      textTheme: GoogleFonts.pottaOneTextTheme(),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+        },
+      ),
+      // fontFamily: 'PottaOne',
     );
   }
 
   static ThemeData darkTheme(ColorScheme? darkDynamicScheme) {
-    final scheme = darkDynamicScheme ?? const ColorScheme.dark();
+    // final scheme = darkDynamicScheme ?? const ColorScheme.dark();
+    final scheme =
+        darkDynamicScheme ?? ColorScheme.fromSeed(seedColor: seedColor);
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      fontFamily: 'PottaOne',
+      textTheme: GoogleFonts.pottaOneTextTheme(),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 }

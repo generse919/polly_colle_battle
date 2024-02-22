@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1123013595076854755}
   m_Layer: 0
   m_Name: MainModel
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -47,6 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _avaterModel: {fileID: 919132149155446097, guid: f0c51abb9dc0e4f48a765bd74169e1a0, type: 3}
   mat_vertexColorApply: {fileID: 2100000, guid: b2f7f135160274dae93b883733c1f87a, type: 2}
+  ModelUrl: 
 --- !u!114 &1123013595076854755
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,9 +1,11 @@
+using UniRx;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-
-    public Transform target; // 追従対象のオブジェクト
+    public Transform targetParent; // 追従対象のオブジェクトの親
+    [SerializeField]
+    Transform target; // 追従対象のオブジェクト
     public float distance = 1.0f; // カメラとオブジェクトの距離
     public float height = 3.0f; // カメラの高さ
     public float smoothSpeed = 5.0f; // 追従のスムーズさ
@@ -14,9 +16,20 @@ public class CameraController : MonoBehaviour
     {
         // カメラの初期位置を設定
         offset = new Vector3(distance, height, 0);
+
+        targetParent.ObserveEveryValueChanged(x => x.childCount)
+        .Subscribe(_ => updateTarget());
+
+        // // カメラのターゲットを更新
+        // foreach(var ch in target.GetComponentsInChildren<Transform>()){
+        //     if(ch.GetComponent<MeshRenderer>() == null)continue;
+        //     //MeshRendererがあるオブジェクトをターゲットにする
+        //     target = ch;
+        //     break;
+        // }
     }
 
-    void LateUpdate()
+    void Update()
     {
         if (target == null)
         {
@@ -31,5 +44,15 @@ public class CameraController : MonoBehaviour
 
         // カメラが追従対象を向くようにする
         transform.LookAt(target);
+    }
+
+    void updateTarget(){
+        target = null;
+        foreach(var ch in targetParent.GetComponentsInChildren<Transform>()){
+            if(ch.GetComponent<MeshRenderer>() == null)continue;
+            //MeshRendererがあるオブジェクトをターゲットにする
+            target = ch;
+            break;
+        }
     }
 }

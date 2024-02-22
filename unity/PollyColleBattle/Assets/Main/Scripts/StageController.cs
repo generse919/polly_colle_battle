@@ -10,8 +10,10 @@ public class StageController : MonoBehaviour
 
     [SerializeField]
     Material mat_lightTheme;
+#if UNITY_EDITOR
     [SerializeField]
     Material mat_darkTheme;
+#endif
 
     // Start is called before the first frame update
     void Start()
@@ -28,7 +30,7 @@ public class StageController : MonoBehaviour
            .ObserveEveryValueChanged(_gm => _gm.isDarkMode)
            .Subscribe(flag => changeMat(flag));
         }
-        
+
 
         if (o_stageTile == null)
         {
@@ -47,6 +49,7 @@ public class StageController : MonoBehaviour
     /// <param name="flag"></param>
     void changeMat(bool flag)
     {
-        o_stageTile.GetComponent<MeshRenderer>().material = (flag) ? mat_darkTheme : mat_lightTheme;
+        //o_stageTile.GetComponent<MeshRenderer>().material = (flag) ? mat_darkTheme : mat_lightTheme;
+        o_stageTile.GetComponent<MeshRenderer>().material = mat_lightTheme;
     }
 }

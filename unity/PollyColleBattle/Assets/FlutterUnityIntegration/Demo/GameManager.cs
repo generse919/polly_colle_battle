@@ -13,20 +13,27 @@ public class GameManager : MonoBehaviour
 
     public int controlUseIndex = 0;
 
+
     // Start is called before the first frame update
     void Start()
     {
-        gameObject.AddComponent<UnityMessageManager>();
+        var umm = gameObject.AddComponent<UnityMessageManager>();
 #if UNITY_EDITOR || UNITY_EDITOR_OSX
-        foreach(var o in GameObject.FindGameObjectsWithTag("Untagged"))
+        foreach (var o in GameObject.FindGameObjectsWithTag("Untagged"))
         {
             Debug.Log(o.name);
-            if(o.name == "glTF-StableFramerate")
+            if (o.name == "glTF-StableFramerate")
             {
                 Destroy(o);
             }
         }
 #endif
+
+        //シーンがTitleSceneだったら、Flutter側にメッセージを送信
+        if (SceneManager.GetActiveScene().name == "TitleScene")
+        {
+            umm.SendMessageToFlutter("InitComplete");
+        }
     }
 
     // Update is called once per frame
@@ -55,14 +62,16 @@ public class GameManager : MonoBehaviour
     public void OpenScene(String scene)
     {
         SceneManager.LoadScene(scene);
+        //シーンがロードできたら、Flutter側にメッセージを送信
+        GetComponent<UnityMessageManager>().SendMessageToFlutter("シーン：" + scene);
     }
 
 
     [Serializable]
     public class OpenModelParam
     {
-        public string  path;
-        public string  objName;
+        public string path;
+        public string objName;
     }
 
     /// <summary>
@@ -80,7 +89,7 @@ public class GameManager : MonoBehaviour
             Debug.Log(omp.objName);
             Debug.Log(omp.path);
             GameObject mainModel = GameObject.Find(omp.objName);
-            if(mainModel == null)
+            if (mainModel == null)
             {
                 GetComponent<UnityMessageManager>().SendMessageToFlutter("mainModel is null!");
             }
@@ -93,7 +102,7 @@ public class GameManager : MonoBehaviour
         {
             GetComponent<UnityMessageManager>().SendMessageToFlutter("エラー：" + e.ToString());
         }
-        
+
     }
 
 
@@ -108,7 +117,7 @@ public class GameManager : MonoBehaviour
         isDarkMode = flag;
     }
 
-    
+
 
 
 }

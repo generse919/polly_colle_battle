@@ -1,17 +1,11 @@
 using UnityEngine;
-using UniRx;
 using UnityEditor;
-using UnityEngine.Networking;
 using System;
-using System.Collections;
-using System.IO;
-using System.Collections.Generic;
-using System.Runtime.Serialization.Formatters.Binary;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 using GLTFast;
-using GLTFast.Materials;
 using GLTFast.Logging;
+using Cysharp.Threading.Tasks;
+using System.Threading;
+
 
 
 
@@ -25,7 +19,7 @@ public class ModelGenerator : MonoBehaviour
     GameObject _avaterModel;
 
     [SerializeField]
-    UnityEngine.Material mat_vertexColorApply;
+    Material mat_vertexColorApply;
 
     [SerializeField]
     String ModelUrl = null;
@@ -36,7 +30,7 @@ public class ModelGenerator : MonoBehaviour
     ImportSettings _settings;
 
     // Start is called before the first frame update
-    void Start()
+    async void Start()
     {
         //RefreshModel();
         //this
@@ -44,8 +38,16 @@ public class ModelGenerator : MonoBehaviour
         //   .Skip(1) // 初回は無視
         //   .Subscribe(OnModelChanged)
         //   .AddTo(gameObject);
+
+        var tokenSource = new CancellationTokenSource();
+
+        if (!await SetGLB(null, token:tokenSource.Token) && _avaterModel != null)
+        {
+            Instantiate(_avaterModel, transform);
+            return;
+        }
 #if UNITY_EDITOR || UNITY_EDITOR_OSX
-        SetGLB(null);
+        ;
 #endif
 
     }
@@ -100,31 +102,39 @@ public class ModelGenerator : MonoBehaviour
     /// </summary>
     private void InitGltfImport()
     {
+        //設定の初期化
+        //読み込み/書き込みができるようにしておく
+
         _settings = new ImportSettings { };
-        //if (_gltfImport != null) return;
+
+        if (_gltfImport != null)
+        {
+            //設定済みであれば破棄
+            _gltfImport.Dispose();
+        }
         _gltfImport = new GltfImport(
-            materialGenerator: new CustomMaterialGenerator(mat_vertexColorApply));
-        //_gltfImport.defaultMaterial = mat_vertexColorApply;
-        
+            materialGenerator: (mat_vertexColorApply == null) ? null : new CustomMaterialGenerator(mat_vertexColorApply));
     }
 
     private void ClearModel()
     {
-        foreach(var child in GetComponentsInChildren<Transform>())
+        foreach (var child in GetComponentsInChildren<Transform>())
         {
             //名前がworldの子オブジェクトを削除する。
-            if (child.name == "world")
-                Destroy(child.gameObject);
+            if (child.tag == "Player") continue;
+            Destroy(child.gameObject);
         }
     }
     /// <summary>
     /// urlで指定されたGLBモデルをインポート
     /// </summary>
     /// <param name="url">GLBのURL null指定時はModelUrlに初期設定されたUrlからGLBを読み込む</param>
-    public async void SetGLB(string url)
+    public async UniTask<bool> SetGLB(string url,CancellationToken token = default)
     {
-        
-        if(ModelUrl == null && url == null)
+        //GLTFastの読み込みはメインスレッドで行う(オブジェクト生成はスレッドプールでできないため)
+        await UniTask.SwitchToMainThread(cancellationToken:token);
+
+        if (ModelUrl == null && url == null)
         {
             Debug.LogWarning("Both parameter \"ModelUrl\" & \"url\" are null and cannot be set GLB!!");
         }
@@ -134,26 +144,42 @@ public class ModelGenerator : MonoBehaviour
         Debug.Log("onEditor");
 
         var loadingURL = (url == null) ? ModelUrl : url;
+        if (loadingURL == null || loadingURL.Length == 0)
+        {
+            return false;
+        }
         Debug.Log("loading: " + loadingURL);
-        var success = await _gltfImport.Load(loadingURL,_settings);
+
+        var success = await _gltfImport.Load(loadingURL, _settings, cancellationToken: token);
+
+        token.ThrowIfCancellationRequested();
 
         if (success)
         {
-            success = await _gltfImport.InstantiateMainSceneAsync(transform);
-            Debug.Log("setGLB: " + url);
-            if (url == null) return;
+            success = await _gltfImport.InstantiateMainSceneAsync(transform, cancellationToken: token);
+            Debug.Log("setGLB: " + loadingURL);
             //生成したら、モデルのURLを保存
-            ModelUrl = url;
+            ModelUrl = loadingURL;
+            // await UniTask.SwitchToMainThread();
+            return true;
         }
         else
         {
             Debug.LogError("GLBを読み込めませんでした。");
-            return;
+            // await UniTask.SwitchToMainThread();
+            return false;
         }
 
-        
-       
+
+
+
     }
+
+    public void SetGLBOnFlutter(string url)
+    {
+        SetGLB(url, CancellationToken.None);
+    }
+
 
     class CustomMaterialGenerator : GLTFast.Materials.IMaterialGenerator
     {

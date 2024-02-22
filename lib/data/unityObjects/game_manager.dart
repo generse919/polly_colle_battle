@@ -20,6 +20,7 @@ part 'game_manager.g.dart';
 ///
 
 enum SceneList {
+  titleScene,
   pollyScene,
   battleScene,
   pollySceneDemo,
@@ -59,11 +60,24 @@ class UWGameManager extends UnityObject {
 
   void openModel(OpenModelParam param) {
     Develop.log("openModel ${param.toJson().toString().convertToJson()}");
-    controller.postMessage(
-        name(), "OpenModel", param.toJson().toString().convertToJson());
+    controller.postJsonMessage(name(), "OpenModel", param.toJson());
+    // controller.postMessage(
+    //     name(), "OpenModel", param.toJson().toString().convertToJson());
   }
 
   void setDarkMode(bool isDarkMode) {
     controller.postMessage(name(), "SetDarkMode", isDarkMode);
+  }
+}
+
+class UWPlayer extends UnityObject {
+  UWPlayer(super.controller, {this.playerID = 1});
+  final int playerID;
+  @override
+  String name() => "Player$playerID";
+
+  void setGLB(String glbURL) {
+    Develop.log("setGLB $glbURL");
+    controller.postMessage(name(), "SetGLBOnFlutter", glbURL);
   }
 }

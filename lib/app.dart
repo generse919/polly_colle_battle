@@ -35,7 +35,7 @@ class App extends ConsumerWidget {
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
         return MaterialApp(
           theme: AppTheme.lightTheme(lightDynamic),
-          darkTheme: AppTheme.darkTheme(darkDynamic),
+          darkTheme: AppTheme.darkTheme(null),
           showPerformanceOverlay: (F.appFlavor == Flavor.dev),
           debugShowCheckedModeBanner: false,
           title: F.title,

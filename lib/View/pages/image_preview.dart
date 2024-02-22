@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -113,6 +114,13 @@ class ImagePreview extends ConsumerStatefulWidget {
 class _ImagePreviewState extends ConsumerState<ImagePreview> {
   ImageDetails? _details;
 
+  String generateRandomString(int length) {
+    const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    final random = Random();
+    return String.fromCharCodes(Iterable.generate(
+        length, (_) => letters.codeUnitAt(random.nextInt(letters.length))));
+  }
+
   ///取得した画像を送信する
   _sendFileToModelConvertServer() async {
     //送信する画像パスを更新
@@ -120,7 +128,9 @@ class _ImagePreviewState extends ConsumerState<ImagePreview> {
 
     //ファイルをドキュメントディレクトリに保存
     final docDir = await FileHelper.appDocumentsDir;
-    final imgPath = "${docDir!.path}/${path.basename(widget.imagePath)}";
+
+    final imgPath =
+        "${docDir!.path}/${generateRandomString(8)}${path.extension(widget.imagePath)}";
     final file = File(imgPath);
     final srcFile = File(widget.imagePath);
 

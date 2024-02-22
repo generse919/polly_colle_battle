@@ -1,11 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
-[RequireComponent(typeof(ModelGenerator))]
-public class PlayerGenerator : MonoBehaviour
+using UnityEngine.EventSystems;
+[RequireComponent(typeof(ModelGenerator), typeof(PlayerData))]
+public class PlayerGenerator : MonoBehaviour , IEventSystemHandler
 {
     ModelGenerator mg;
+    GameManager gm;
 
     public enum PLAYER_INDEX
     {
@@ -15,12 +15,18 @@ public class PlayerGenerator : MonoBehaviour
     }
 
     public PLAYER_INDEX playerIndex;
+
+    public bool isAI = false;
+
     // Start is called before the first frame update
     void Start()
     {
         mg = GetComponent<ModelGenerator>();
+        gm = FindObjectOfType<GameManager>();
+
         this
             .ObserveEveryValueChanged(self => self.transform.GetComponentInChildren<MeshFilter>())
+            .Skip(1) // 初回は無視
             .Subscribe(onChangeMesh);
     }
 
@@ -39,7 +45,11 @@ public class PlayerGenerator : MonoBehaviour
         var child = GetComponentInChildren<MeshRenderer>();
         if (child == null) return;
         var pc = child.gameObject.AddComponent<PlayerController>();
+        child.gameObject.tag = "Player";
         pc.userIndex = ((int)playerIndex);
+        pc.isAI = isAI;
+        pc.parentRoot = transform;
+        pc.playerData = GetComponent<PlayerData>();
 
     }
 

@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -29,6 +28,9 @@ class Polly {
 
 class PollyListNotifier extends StateNotifier<List<Polly>> {
   PollyListNotifier(super.state);
+
+  static Map<int, List<int>> fileData = {};
+  static int total_bytes = 0;
 
   void remove(Polly polly) {
     state.remove(polly);
@@ -62,15 +64,25 @@ class PollyListNotifier extends StateNotifier<List<Polly>> {
   }
 
   pollyWrite(Polly polly, String filename) async {
-    final moveDir = await FileHelper.appDocumentsDir
-        .then((value) => "${value!.path}/$filename");
     //キャッシュされていたバイトデータをシーケンス番号順にソートする。
-    final bytes = SplayTreeMap.from(
-            polly.data.data_cache!, (int a, int b) => a.compareTo(b))
-        .values
-        .toList() as List<int>;
+    List<int> sortedList = [];
 
-    await FileHelper.writeNewBytes(bytes, filename);
+    var entries = polly.data.data_cache!.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    for (var entry in entries) {
+      sortedList.addAll(entry.value);
+    }
+
+    for (int i = 0; i < entries.length; i++) {
+      if (entries[i].key != i) {
+        Develop.log("sequence error: ${entries[i].key}");
+      }
+    }
+
+    Develop.log(filename);
+
+    await FileHelper.writeNewBytes(sortedList, filename);
   }
 
   void add(Polly polly) {
@@ -78,7 +90,7 @@ class PollyListNotifier extends StateNotifier<List<Polly>> {
     if (polly.socket != null) {
       polly.socket!.onMessage = (data) {
         var message = jsonDecode(data);
-        Develop.log("message: ${message['status']}");
+        // Develop.log("message: ${message['status']}");
         //messageにstatusが含まれている場合は、statusを更新する。
         if (message.containsKey('status')) {
           PollyStatus status = PollyStatus.invalid;
@@ -89,27 +101,42 @@ class PollyListNotifier extends StateNotifier<List<Polly>> {
 
             ///モデル生成完了したら、ファイルパスを登録する。
             case "model_creation_finished":
-              //pollyを書き込む。
-              pollyWrite(polly, message['filename'] as String);
-              oldPolly.socket?.close();
-              update(Polly(
-                  oldPolly.data.copyWith(
-                      pollyPath: message['filename'],
-                      status: PollyStatus.available),
-                  socket: null));
+              FileHelper.appDocumentsDir.then((value) {
+                Develop.log("fileData: ${message["sequence"]}");
+                final moveDir =
+                    "${value!.path}/${path.basenameWithoutExtension(polly.data.imagePath)}.glb";
+                final newPolly = Polly(
+                    oldPolly.data.copyWith(
+                        pollyPath: moveDir,
+                        data_cache: fileData,
+                        status: PollyStatus.available),
+                    socket: null);
+                //pollyを書き込む。
+                pollyWrite(newPolly, moveDir);
+                update(newPolly);
+                Develop.log("total_bytes: $total_bytes");
+                total_bytes = 0;
+                oldPolly.socket?.close();
+              });
+
               break;
             case "model_creation_failed":
               status = PollyStatus.delete;
               break;
             case "model_creation_send":
               var chunkData = base64Decode(message['filedata']);
-              Develop.log("chunkData: ${chunkData.length}");
-              Develop.log("sequence: ${message['sequence']}");
-              update(Polly(
-                oldPolly.data.copyWith(
-                    data_cache: oldPolly.data.data_cache!
-                      ..addAll({message['sequence']: chunkData})),
-              ));
+              // Develop.log("chunkData: ${chunkData.length}");
+              // Develop.log("sequence: ${message['sequence']}");
+              // Develop.log("${fileData.length}");
+
+              ///static変数にデータを追加
+              fileData[message['sequence']] = chunkData;
+              total_bytes += chunkData.length;
+              // var newData = oldPolly.data.data_cache!;
+              // newData.addAll({message['sequence']: chunkData});
+              // update(Polly(
+              //   oldPolly.data.copyWith(data_cache: newData),
+              // ));
               break;
             default:
               status = PollyStatus.invalid;
@@ -186,23 +213,26 @@ final pollyListProvider =
       ref.watch(assetMoveProvider("assets/images/wrestler.jpeg"));
   final wrestlerGlbPathState =
       ref.watch(assetMoveProvider("assets/models/wrestler.glb"));
-  final cakeJpegPathState =
-      ref.watch(assetMoveProvider("assets/images/cake.jpg"));
-  final cakeGlbPathState =
-      ref.watch(assetMoveProvider("assets/models/cake.glb"));
+  // final cakeJpegPathState =
+  //     ref.watch(assetMoveProvider("assets/images/cake.jpg"));
+  // final cakeGlbPathState =
+  //     ref.watch(assetMoveProvider("assets/models/cake.glb"));
 
   List<Polly> list = [];
 
   if (appleJpegPathState is AsyncData &&
-      appleGlbPathState is AsyncData &&
-      bananaJpegPathState is AsyncData &&
-      bananaGlbPathState is AsyncData &&
-      icecreamJpegPathState is AsyncData &&
-      icecreamGlbPathState is AsyncData &&
-      wrestlerJpegPathState is AsyncData &&
-      wrestlerGlbPathState is AsyncData &&
-      cakeJpegPathState is AsyncData &&
-      cakeGlbPathState is AsyncData) {
+          appleGlbPathState is AsyncData &&
+          bananaJpegPathState is AsyncData &&
+          bananaGlbPathState is AsyncData &&
+          icecreamJpegPathState is AsyncData &&
+          icecreamGlbPathState is AsyncData &&
+          wrestlerJpegPathState is AsyncData &&
+          wrestlerGlbPathState is AsyncData
+      // &&
+      // cakeJpegPathState is AsyncData &&
+      // cakeGlbPathState is AsyncData
+
+      ) {
     list = [
       ...list,
       Polly(
@@ -233,13 +263,13 @@ final pollyListProvider =
             pollyPath: wrestlerGlbPathState.value!,
             status: PollyStatus.available),
       ),
-      Polly(
-        PollyData(
-            name: "cake",
-            imagePath: cakeJpegPathState.value!,
-            pollyPath: cakeGlbPathState.value!,
-            status: PollyStatus.available),
-      ),
+      // Polly(
+      //   PollyData(
+      //       name: "cake",
+      //       imagePath: cakeJpegPathState.value!,
+      //       pollyPath: cakeGlbPathState.value!,
+      //       status: PollyStatus.available),
+      // ),
     ];
   }
 
@@ -273,7 +303,7 @@ class _PollyPageState extends ConsumerState<PollyPage> {
   // Callback that connects the created controller to the unity controller
   void _onUnityCreated(UnityWidgetController controller) {
     _unityWidgetController = controller;
-    // UWGameManager(controller).openScene(SceneList.pollyScene);
+    UWGameManager(controller).openScene(SceneList.pollyScene);
   }
 
   void _onUnityMessage(message) {
@@ -325,74 +355,113 @@ class _PollyPageState extends ConsumerState<PollyPage> {
 
     final selectedPolly = ref.watch(selectedPollyStateProvider);
 
-    return Scaffold(
-      body: Container(
-          child: Column(
-        children: [
-          SizedBox(
-              height: height / 2,
-              child: UnityWidget(
-                onUnityCreated: _onUnityCreated,
-                onUnityMessage: _onUnityMessage,
-                fullscreen: true,
-              )),
-          Expanded(
-            child: ListView(
+    return PopScope(
+        canPop: false,
+        child: Scaffold(
+          body: Stack(children: [
+            Column(
               children: [
-                //写真を撮るカード
-                InkWell(
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const OnPollyMakeMenu())),
-                  child: SizedBox(
-                    height: 90,
-                    child: Card(
-                        color: Theme.of(context).colorScheme.secondary,
-                        child: const Row(
-                          children: [
-                            SizedBox(
-                              width: 87,
-                              child: Icon(Icons.camera_alt_outlined),
+                SizedBox(
+                    height: height / 2,
+                    child: UnityWidget(
+                      onUnityCreated: _onUnityCreated,
+                      onUnityMessage: _onUnityMessage,
+                      fullscreen: true,
+                    )),
+                Expanded(
+                  child:
+                      // GestureDetector(
+                      //   onTapDown: (details) {
+                      //     _unityWidgetController?.pause();
+                      //   },
+                      //   onTapUp: (details) {
+                      //     _unityWidgetController?.resume();
+                      //   },
+                      //   onTapCancel: () {
+                      //     _unityWidgetController?.resume();
+                      //   },
+                      //   child:
+                      // ),
+
+                      ListView(
+                    cacheExtent: 10,
+                    children: [
+                      //写真を撮るカード
+                      InkWell(
+                        onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => const OnPollyMakeMenu())),
+                        child: SizedBox(
+                          height: 90,
+                          child: Card(
+                              color: Theme.of(context).colorScheme.secondary,
+                              child: const Row(
+                                children: [
+                                  SizedBox(
+                                    width: 87,
+                                    child: Icon(Icons.camera_alt_outlined),
+                                  ),
+                                  Text("ポリを作る"),
+                                ],
+                              )),
+                        ),
+                      ),
+                      ...
+                      //pollyListの要素数分、名前のTextウィジェットを生成
+                      pollyList.map((e) => InkWell(
+                            onTap: () {
+                              UWGameManager(_unityWidgetController!).openModel(
+                                  OpenModelParam(
+                                      path: e.data.pollyPath!,
+                                      objName: "MainModel"));
+                            },
+                            child: SizedBox(
+                              height: 90,
+                              child: Card(
+                                  child: Row(
+                                children: [
+                                  InkWell(
+                                    onTap: () => _confirmChangeSelectedPolly(e),
+                                    child: SizedBox(
+                                      width: 87,
+                                      child: (selectedPolly != null &&
+                                              selectedPolly.hashCode ==
+                                                  e.hashCode)
+                                          ? const Icon(Icons.star)
+                                          : const Icon(
+                                              Icons.star_border_outlined),
+                                    ),
+                                  ),
+                                  Expanded(child: Text(e.data.name)),
+                                  Image.file(File(e.data.imagePath))
+                                ],
+                              )),
                             ),
-                            Text("ポリを作る"),
-                          ],
-                        )),
+                          ))
+                    ],
                   ),
                 ),
-                ...
-                //pollyListの要素数分、名前のTextウィジェットを生成
-                pollyList.map((e) => InkWell(
-                      onTap: () {
-                        UWGameManager(_unityWidgetController!).openModel(
-                            OpenModelParam(
-                                path: e.data.pollyPath!, objName: "MainModel"));
-                      },
-                      child: SizedBox(
-                        height: 90,
-                        child: Card(
-                            child: Row(
-                          children: [
-                            InkWell(
-                              onTap: () => _confirmChangeSelectedPolly(e),
-                              child: SizedBox(
-                                width: 87,
-                                child: (selectedPolly != null &&
-                                        selectedPolly.hashCode == e.hashCode)
-                                    ? const Icon(Icons.star)
-                                    : const Icon(Icons.star_border_outlined),
-                              ),
-                            ),
-                            Expanded(child: Text(e.data.name)),
-                            Image.file(File(e.data.imagePath))
-                          ],
-                        )),
-                      ),
-                    ))
               ],
             ),
-          ),
-        ],
-      )),
-    );
+            Positioned(
+                top: 30,
+                left: 10,
+                child: Card(
+                  elevation: 20,
+                  child: Column(
+                    children: [
+                      MaterialButton(
+                        onPressed: () {
+                          _unityWidgetController?.unload();
+                          Navigator.pop(context);
+                        },
+                        child: const Text("＜"),
+                      ),
+                    ],
+                  ),
+                )),
+          ]),
+        ));
   }
 }
 
@@ -410,8 +479,7 @@ class _OnPollyMakeMenuState extends State<OnPollyMakeMenu> {
       appBar: AppBar(
         title: const Text("作成方法"),
       ),
-      body: Container(
-          child: Column(
+      body: Column(
         children: [
           InkWell(
               onTap: () => Navigator.of(context).push(
@@ -450,21 +518,21 @@ class _OnPollyMakeMenuState extends State<OnPollyMakeMenu> {
             )),
           )
         ],
-      )),
+      ),
     );
   }
 }
 
-final fprbCameraInit =
-    FutureProvider.family<CameraController, CameraDescription>(
-        (ref, camera) async {
+final fprbCameraInit = FutureProvider.family
+    .autoDispose<CameraController, CameraDescription>((ref, camera) async {
   final cameraController = CameraController(camera, ResolutionPreset.max);
   await cameraController.initialize();
   return cameraController;
 });
 
-final fprbCameraAvailableList = FutureProvider<List<CameraDescription>>(
-    (ref) async => await availableCameras());
+final fprbCameraAvailableList =
+    FutureProvider.autoDispose<List<CameraDescription>>(
+        (ref) async => await availableCameras());
 
 //写真を撮るシーン
 class TakeAPhotoPage extends ConsumerStatefulWidget {
@@ -486,7 +554,25 @@ class _TakeAPhotoPageState extends ConsumerState<TakeAPhotoPage> {
   @override
   void dispose() {
     cameraController!.dispose();
+    Develop.log("dispose");
     super.dispose();
+  }
+
+  _onTapTakePictureButton() async {
+    if (cameraController == null || !cameraController!.value.isInitialized) {
+      return;
+    }
+
+    cameraController!.takePicture().then((image) {
+      if (image.path.isEmpty) return;
+      // 表示用の画面に遷移
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ImagePreview(imagePath: image.path),
+          fullscreenDialog: true,
+        ),
+      );
+    });
   }
 
   @override
@@ -517,22 +603,7 @@ class _TakeAPhotoPageState extends ConsumerState<TakeAPhotoPage> {
                   floatingActionButton: FloatingActionButton(
                     child: GestureDetector(
                       // タップした時
-                      onTap: () async {
-                        // 写真撮影
-                        cameraController!.takePicture().then(
-                          (image) {
-                            if (image.path.isEmpty) return;
-                            // 表示用の画面に遷移
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    ImagePreview(imagePath: image.path),
-                                fullscreenDialog: true,
-                              ),
-                            );
-                          },
-                        );
-                      },
+                      onTap: _onTapTakePictureButton,
                       child: const Icon(Icons.add_a_photo),
                     ),
                     onPressed: () {},
